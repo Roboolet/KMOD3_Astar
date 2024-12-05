@@ -19,10 +19,10 @@ public class Astar
     {
         // setup
         this.grid = grid;
-        //HashSet<Node> visited = new HashSet<Node>();
+        HashSet<Vector2Int> visited = new HashSet<Vector2Int>();
         List<Node> open = new List<Node>();
         Node root = CreateNode(startPos, endPos, null);
-        open.AddRange(ExpandNode(root, endPos));
+        open.AddRange(ExpandNode(root, endPos, visited));
 
         bool satisfied = false;
         int iterations = 0;
@@ -64,7 +64,7 @@ public class Astar
             else
             {
                 // expand the highest node
-                open.AddRange(ExpandNode(highest, endPos));
+                open.AddRange(ExpandNode(highest, endPos, visited));
                 open.Remove(highest);
                 
                 // remove duplicates and sort by H score
@@ -76,7 +76,7 @@ public class Astar
         return null;
     }
 
-    List<Node> ExpandNode(Node source, Vector2Int endPos)
+    List<Node> ExpandNode(Node source, Vector2Int endPos, HashSet<Vector2Int> visitedList)
     {
         Vector2Int sourcePos = source.position;
         List<Node> expanded = new List<Node>();
@@ -84,12 +84,14 @@ public class Astar
         foreach (Cell c in grid[sourcePos.x, sourcePos.y].GetNeighbours(grid))
         {
             // do not add if neighbour has a wall inbetween source node
-            if (!(c.HasWall(Wall.RIGHT) && c.gridPosition.x < sourcePos.x)
+            if (!visitedList.Contains(c.gridPosition)
+                && !(c.HasWall(Wall.RIGHT) && c.gridPosition.x < sourcePos.x)
                 && !(c.HasWall(Wall.DOWN) && c.gridPosition.y > sourcePos.y)
                 && !(c.HasWall(Wall.LEFT) && c.gridPosition.x > sourcePos.x)
                 && !(c.HasWall(Wall.UP) && c.gridPosition.y < sourcePos.y))
             {
                 expanded.Add(CreateNode(c.gridPosition, endPos, source));
+                visitedList.Add(c.gridPosition);
             }
         }
 
