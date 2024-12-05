@@ -30,7 +30,7 @@ public class Astar
         {
             // abort search if too many iterations
             iterations++;
-            if (iterations > 50)
+            if (iterations > 19999)
             {
                 Debug.LogWarning("Aborted path search after " + iterations + " iterations");
                 break;
@@ -56,6 +56,9 @@ public class Astar
                 }
 
                 path.Reverse();
+                
+                Debug.Log("Found valid path after " + iterations + " iterations" +
+                          "\nPath length: " + path.Count);
                 return path;
             }
             else
@@ -77,25 +80,18 @@ public class Astar
     {
         Vector2Int sourcePos = source.position;
         List<Node> expanded = new List<Node>();
-        
-        // setup check locations
-        Vector2Int gridL = new Vector2Int(Mathf.Clamp(sourcePos.x - 1, 0, grid.GetLength(0)), sourcePos.y);
-        Vector2Int gridU = new Vector2Int(sourcePos.x, Mathf.Clamp(sourcePos.y + 1, 0, grid.GetLength(1)));
-        Vector2Int gridR = new Vector2Int(Mathf.Clamp(sourcePos.x + 1, 0, grid.GetLength(0)), sourcePos.y);
-        Vector2Int gridD = new Vector2Int(sourcePos.x, Mathf.Clamp(sourcePos.y - 1, 0, grid.GetLength(1)));
-        
-        // check for walls and add new nodes if not blocked
-        if(!grid[gridL.x, gridL.y].HasWall(Wall.RIGHT))
-            expanded.Add(CreateNode(sourcePos + Vector2Int.left, endPos, source));
-        
-        if(!grid[gridU.x, gridU.y].HasWall(Wall.DOWN))
-            expanded.Add(CreateNode(sourcePos + Vector2Int.up, endPos, source));
-        
-        if(!grid[gridR.x, gridR.y].HasWall(Wall.LEFT))
-            expanded.Add(CreateNode(sourcePos + Vector2Int.right, endPos, source));
-        
-        if(!grid[gridD.x, gridD.y].HasWall(Wall.UP))
-            expanded.Add(CreateNode(sourcePos + Vector2Int.down, endPos, source));
+
+        foreach (Cell c in grid[sourcePos.x, sourcePos.y].GetNeighbours(grid))
+        {
+            // do not add if neighbour has a wall inbetween source node
+            if (!(c.HasWall(Wall.RIGHT) && c.gridPosition.x < sourcePos.x)
+                && !(c.HasWall(Wall.DOWN) && c.gridPosition.y > sourcePos.y)
+                && !(c.HasWall(Wall.LEFT) && c.gridPosition.x > sourcePos.x)
+                && !(c.HasWall(Wall.UP) && c.gridPosition.y < sourcePos.y))
+            {
+                expanded.Add(CreateNode(c.gridPosition, endPos, source));
+            }
+        }
 
         return expanded;
     }
